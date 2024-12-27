@@ -67,6 +67,7 @@ def get_vacancies():
         name = vacancy_json['name']
         description = BeautifulSoup(vacancy_json['description'], 'html.parser').text
         key_skills = ', '.join([skill['name'] for skill in vacancy_json['key_skills']])
+        key_skills = key_skills if key_skills != '' else '—'
         employer_name = vacancy_json['employer']['name']
     
         salary_from = vacancy_json['salary']['from'] if vacancy_json['salary'] and 'from' in vacancy_json[
