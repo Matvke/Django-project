@@ -3,7 +3,13 @@
 {% block title %}Генеральная статистика{% endblock %}
 
 {% block content %}
-<h1>Генеральная статистика</h1>
+{% for content in contents%}
+    <h1>{{ content.title }}</h1>
+    <div class="content_container">
+        {{ content.html_content|safe }}
+    </div>
+{% endfor%}
+
 {% for report in reports %}
     <h2>{{ report.title }}</h2>
     <div class="chart_container">

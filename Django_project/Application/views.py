@@ -12,24 +12,30 @@ def get_pages():
     ]
 
 def index_page(request):
-    return render(request, 'index.html', {'pages': get_pages()})
+    contents = PageContent.objects.filter(page='index_page')
+    return render(request, 'index.html', {'pages': get_pages(), 'contents': contents})
 
 def general_statistics(request):
     reports = Report.objects.filter(category='general_statistics')
-    return render(request, 'general_statistics.html', {'pages': get_pages(), 'reports': reports})
+    contents = PageContent.objects.filter(page='general_statistics')
+    return render(request, 'general_statistics.html', {'pages': get_pages(), 'reports': reports, 'contents': contents})
 
 def demand(request):
     reports = Report.objects.filter(category='demand')
-    return render(request, 'demand.html', {'pages': get_pages(), 'reports': reports})
+    contents = PageContent.objects.filter(page='demand')
+    return render(request, 'demand.html', {'pages': get_pages(), 'reports': reports, 'contents': contents})
 
 def geography(request):
     reports = Report.objects.filter(category='geography')
-    return render(request, 'geography.html', {'pages': get_pages(), 'reports': reports})
+    contents = PageContent.objects.filter(page='geography')
+    return render(request, 'geography.html', {'pages': get_pages(), 'reports': reports, 'contents' : contents})
 
 def skills(request):
     reports = Report.objects.filter(category='skills')
-    return render(request, 'skills.html', {'pages': get_pages(), 'reports': reports})
+    contents = PageContent.objects.filter(page='skills')
+    return render(request, 'skills.html', {'pages': get_pages(), 'reports': reports, 'contents' : contents})
 
 def last_vacancies(request):
     reports = Report.objects.filter(category='last_vacancies')
-    return render(request, 'last_vacancies.html', {'pages': get_pages(), 'reports': reports})
+    contents = PageContent.objects.filter(page='last_vacancies')
+    return render(request, 'last_vacancies.html', {'pages': get_pages(), 'reports': reports, 'contents' : contents})
