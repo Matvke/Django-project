@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report.title }}</title>
+</head>
+<body>
+    <h1>{{ report.title }}</h1>
+    <img src="{{ report.chart.url }}" alt="{{ report.title }}">
+    <div>
+        {{ report.table_html|safe }}
+    </div>
+    <a href="{% url 'report_list' %}">Back to list</a>
+</body>
+</html>

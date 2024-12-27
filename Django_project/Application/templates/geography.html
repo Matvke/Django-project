@@ -1,7 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}Страница география{% endblock %}
+{% block title %}Страница географии{% endblock %}
 
 {% block content %}
-<h1>Добро пожаловать на страницу географии</h1>
+<h1>География вакансий по профессии GameDev</h1>
+{% for report in reports %}
+    <h2>{{ report.title }}</h2>
+    <div class="chart_container">
+        <img src="{{ report.chart.url }}" alt="{{ report.title }}">
+        <div>{{ report.table_html|safe }}</div>
+    </div>
+{% endfor %}
 {% endblock %}

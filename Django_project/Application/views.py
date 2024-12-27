@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from .models import *
 
 def get_pages():
     return [
@@ -14,16 +15,21 @@ def index_page(request):
     return render(request, 'index.html', {'pages': get_pages()})
 
 def general_statistics(request):
-    return render(request, 'general_statistics.html', {'pages': get_pages()})
+    reports = Report.objects.filter(category='general_statistics')
+    return render(request, 'general_statistics.html', {'pages': get_pages(), 'reports': reports})
 
 def demand(request):
-    return render(request, 'demand.html', {'pages': get_pages()})
+    reports = Report.objects.filter(category='demand')
+    return render(request, 'demand.html', {'pages': get_pages(), 'reports': reports})
 
 def geography(request):
-    return render(request, 'geography.html', {'pages': get_pages()})
+    reports = Report.objects.filter(category='geography')
+    return render(request, 'geography.html', {'pages': get_pages(), 'reports': reports})
 
 def skills(request):
-    return render(request, 'skills.html', {'pages': get_pages()})
+    reports = Report.objects.filter(category='skills')
+    return render(request, 'skills.html', {'pages': get_pages(), 'reports': reports})
 
 def last_vacancies(request):
-    return render(request, 'last_vacancies.html', {'pages': get_pages()})
+    reports = Report.objects.filter(category='last_vacancies')
+    return render(request, 'last_vacancies.html', {'pages': get_pages(), 'reports': reports})
