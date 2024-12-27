@@ -115,10 +115,15 @@ th{
 
 td{
     font-size: small;
-    padding-left: 5px;
+    text-align: center;
 }
 
 h1{
     color: #FFBE5C;
     margin-bottom: 20px;
+}
+
+a{
+    color: #FFBE5C;
+    text-decoration: none;
 }

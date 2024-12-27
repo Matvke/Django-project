@@ -1,5 +1,13 @@
 from django.shortcuts import render
 from .models import *
+import requests
+import json
+import time
+import pandas as pd
+import requests
+import json
+from bs4 import BeautifulSoup
+
 
 def get_pages():
     return [
@@ -36,6 +44,50 @@ def skills(request):
     return render(request, 'skills.html', {'pages': get_pages(), 'reports': reports, 'contents' : contents})
 
 def last_vacancies(request):
+    vacancies = get_vacancies()
     reports = Report.objects.filter(category='last_vacancies')
     contents = PageContent.objects.filter(page='last_vacancies')
-    return render(request, 'last_vacancies.html', {'pages': get_pages(), 'reports': reports, 'contents' : contents})
+    return render(request, 'last_vacancies.html', {'pages': get_pages(), 'reports': reports, 'contents' : contents, 'vacancies': vacancies})
+
+def get_vacancies():
+    req = requests.get('https://api.hh.ru/vacancies?period=1&per_page=10&text=GameDev&search_field=name&search_field=description')
+    data = req.content.decode()
+    req.close()
+    json_object = json.loads(data)
+    df = pd.DataFrame()
+    
+    for vacancy in json_object['items']:
+    
+        vacancy_id = vacancy['id']
+        vacancy_request = requests.get(f'https://api.hh.ru/vacancies/{vacancy_id}')
+        vacancy_data = vacancy_request.content.decode()
+        vacancy_request.close()
+        vacancy_json = json.loads(vacancy_data)
+    
+        name = vacancy_json['name']
+        description = BeautifulSoup(vacancy_json['description'], 'html.parser').text
+        key_skills = ', '.join([skill['name'] for skill in vacancy_json['key_skills']])
+        employer_name = vacancy_json['employer']['name']
+    
+        salary_from = vacancy_json['salary']['from'] if vacancy_json['salary'] and 'from' in vacancy_json[
+            'salary'] else '—'
+        salary_to = vacancy_json['salary']['to'] if vacancy_json['salary'] and 'to' in vacancy_json['salary'] else '—'
+        salary_currency = vacancy_json['salary']['currency'] if vacancy_json['salary'] and 'currency' in vacancy_json[
+            'salary'] else '—'
+    
+        area_name = vacancy_json['area']['name']
+        published_at = vacancy_json['published_at']
+
+        url = vacancy_json['alternate_url']
+        d = {'name': name,
+            'description': f'{description[:100]}...<a href="{url}" target="_blank"> перейти к вакансии</a>',
+            'key_skills': key_skills,
+            'employer_name': employer_name,
+            'salary_from': salary_from,
+            'salary_to': salary_to,
+            'salary_currency': salary_currency,
+            'area_name': area_name,
+            'published_at': published_at}
+    
+        df = df._append(d, ignore_index=True)
+    return df.to_html(escape=False)
