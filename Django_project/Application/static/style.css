@@ -5,6 +5,7 @@
 }
 
 body, html {
+    margin: 0 auto;
     height: 100%;
     font-family: Inter;
     background-color: #221D22;
@@ -95,8 +96,8 @@ h2{
     display: flex;
 }
 .chart_container img{
-    width: 60%;
-    height: 60%;
+    width: 50%;
+    height: 50%;
     margin-right: 10px;
 }
 .chart_container table{
@@ -126,4 +127,8 @@ h1{
 a{
     color: #FFBE5C;
     text-decoration: none;
+}
+i{
+    font-family: 'Times New Roman', Times, serif;
+    font-size: smaller;
 }

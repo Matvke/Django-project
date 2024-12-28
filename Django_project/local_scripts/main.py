@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import time
 from concurrent.futures import ThreadPoolExecutor
+import swifter
 
 
 def get_currency_data(row):
@@ -21,6 +22,7 @@ def get_currency_data(row):
         return None
     if salary_currency == 'RUR':
         return salary
+
     con = sqlite3.connect('currency.db')
     cur = con.cursor()
     res = cur.execute(f"select {salary_currency} from currency_data where date = '{date}'")
@@ -29,7 +31,6 @@ def get_currency_data(row):
         if result >= 10000000:
             result = None
     except Exception as e:
-        print(f'get_currency_data {e}')
         result = None
     return result
 
@@ -47,22 +48,15 @@ def get_average_salary(row):
         return float((salary_from + salary_to) / 2)
 
 
-def analyze_vacancies():
-    print('Start program')
-    start_time = time.time()
-    csv = 'vacancies_2024.csv'
-    #csv = 'filtered_vacancies.csv'
-    #csv = 'vacs_for_debug.csv'
-
+def analyze_vacancies(csv):
     df = pd.read_csv(csv)
     print('CSV file read')
 
     # Вычисление средней зарплаты
-    df['salary'] = df.apply(get_average_salary, axis=1)
+    df['salary'] = df.swifter.apply(get_average_salary, axis=1)
 
     # Преобразование столбца 'published_at' к типу datetime и обработка NaN
     df['published_at'] = pd.to_datetime(df['published_at'], errors='coerce', utc=True)
-    df = df.dropna(subset=['published_at'])
 
     # Новый столбец для группировки по году
     df['year'] = df['published_at'].dt.year
@@ -71,7 +65,7 @@ def analyze_vacancies():
     df['first_day_of_month'] = df['published_at'].dt.to_period('M').dt.to_timestamp()
 
     # Новый столбец зп в рублях
-    df['salary_in_rub'] = df.apply(get_currency_data, axis=1)
+    df['salary_in_rub'] = df.swifter.apply(get_currency_data, axis=1)
 
     print('Preparation completed')
 
@@ -92,36 +86,9 @@ def analyze_vacancies():
         print('city_count_dynamic done')
         top20_skills = top20_skills_future.result()
         print('top20_skills done')
-
     print('Analyze done')
 
-    create_line_plot(salary_dynamic, 'Динамика средней зарплаты по годам', 'Год', 'Средняя зарплата в рублях')
-    create_template(salary_dynamic, ['Год', 'Средняя зарплата в рублях'], 'Динамика средней зарплаты')
-    print('create_line plot and template done')
-
-    create_bar_plot(count_dynamic, 'Динамика количества вакансий по годам', 'Год', 'Количество вакансий')
-    create_template(count_dynamic, ['Год', 'Количество вакансий'], 'Динамика количества вакансий')
-    print('count_dynamic_bar plot and template done')
-
-    create_bar_plot(city_salary_dynamic, 'Средняя зарплата по городам', 'Город' ,'Средняя зарплата в рублях')
-    create_template(city_salary_dynamic, ['Город','Средняя зарплата в рублях'], 'Средняя зарплата по городам')
-    print('city_salary_dynamic_bar plot and template done')
-
-    create_pie_plot(city_count_dynamic, 'Доли вакансий по городам')
-    create_template(city_count_dynamic, ['Город', 'Доля вакансий'], 'Доля вакансий по городам')
-    print('city_count_dynamic_bar plot and template done')
-
-    for year, skills in top20_skills.values:
-        skills_series = pd.Series(dict(skills))
-        create_pie_plot(skills_series, f'Навыки за {year} год')
-        create_template(skills_series, ['Навык', 'Частота'], f'Навыки за {year} год')
-        print(f"top_20_skills_for_{year} plot and template created")
-
-    print('All charts have been successfully created and saved')
-    end_time = time.time()
-    execution_time = end_time - start_time
-
-    print(f"Время выполнения программы: {execution_time} секунд")
+    return salary_dynamic, count_dynamic, city_salary_dynamic, city_count_dynamic, top20_skills
 
 
 def create_bar_plot(series, title, xlabel, ylabel):
@@ -135,7 +102,8 @@ def create_bar_plot(series, title, xlabel, ylabel):
     plt.grid(True, color='gray')
     plt.tight_layout()
     plt.gca().set_facecolor('#221D22')
-    plt.savefig(f'student_works/bar_plot_{title}.png')
+    plt.savefig(f'student_works/{title}.png')
+    plt.close()
     #plt.show()
 
 
@@ -150,8 +118,10 @@ def create_line_plot(series, title, xlabel, ylabel):
     plt.xticks(ticks=series.index, labels=series.index.astype(int))
     plt.gca().set_facecolor('#221D22')
     plt.tight_layout()
-    plt.savefig(f'student_works/line_plot_{title}.png')
+    plt.savefig(f'student_works/{title}.png')
+    plt.close()
     #plt.show()
+
 
 def create_pie_plot(series, title):
     if series.empty:
@@ -169,14 +139,15 @@ def create_pie_plot(series, title):
     plt.pie(series.values, labels=series.index, autopct=make_autopct(series.values), textprops={'color': 'white' ,'fontsize': 9})
     plt.title(title, color='white')
     plt.tight_layout()
-    plt.savefig(f'student_works/pie_plot_{title}.png')
+    plt.savefig(f'student_works/{title}.png')
+    plt.close()
     #plt.show()
 
 
 def create_template(series, columns, name):
     if series.empty:
         return
-    with open(f'student_works/vacancies_table{name}.html', 'w', encoding='utf-8') as f:
+    with open(f'student_works/{name}.txt', 'w', encoding='utf-8') as f:
         series = series.to_frame().reset_index(drop=False)
         series.columns = columns
         f.write(series.to_html(index=False))
@@ -217,12 +188,11 @@ def get_city_count_dynamic(df):
 
 
 def process_skills_group(skills):
-    if skills.dropna().empty:
-        return []
     all_skills = '\n'.join(skills.dropna()).split('\n')
     cleaned_skills = [skill.strip().replace('\r', '').replace('\n', '') for skill in all_skills]
     print('Group done')
     return Counter(cleaned_skills).most_common(20)
+
 
 def get_top20_skills(df):
     grouped = df.groupby('year')['key_skills']
@@ -244,27 +214,92 @@ def get_top20_skills(df):
     return result_df
 
 
-analyze_vacancies()
+def filter_and_save_csv(input_csv, output_csv, keywords, column_name='name'):
+    """
+    Функция для фильтрации и сохранения CSV-файла на основе ключевых слов.
+
+    :param input_csv: Путь к исходному CSV-файлу.
+    :param output_csv: Путь для сохранения отфильтрованного CSV-файла.
+    :param keywords: Список ключевых слов для фильтрации.
+    :param column_name: Название столбца для фильтрации. По умолчанию 'name'.
+    """
+    df = pd.read_csv(input_csv)
+    valid_names = '|'.join(keywords)
+    filtered_df = df[df[column_name].str.contains(valid_names, case=False, na=False)]
+    filtered_df.to_csv(output_csv, index=False)
 
 
-# def filter_and_save_csv(input_csv, output_csv, keywords, column_name='name'):
-#     """
-#     Функция для фильтрации и сохранения CSV-файла на основе ключевых слов.
-#
-#     :param input_csv: Путь к исходному CSV-файлу.
-#     :param output_csv: Путь для сохранения отфильтрованного CSV-файла.
-#     :param keywords: Список ключевых слов для фильтрации.
-#     :param column_name: Название столбца для фильтрации. По умолчанию 'name'.
-#     """
-#     
-#     df = pd.read_csv(input_csv)
-#     valid_names = '|'.join(keywords)
-#     filtered_df = df[df[column_name].str.contains(valid_names, case=False, na=False)]
-#     filtered_df.to_csv(output_csv, index=False)
-#
-#
-# 
-# input_csv = 'vacancies_2024.csv'
-# output_csv = 'vacs_for_debug.csv'
-# keywords = ['Разработчик игр', 'GameDev', 'game', 'unity', 'игр', 'unreal']
-# filter_and_save_csv(input_csv, output_csv, keywords)
+if __name__ == '__main__':
+    print('Start program')
+    start_time = time.time()
+
+    full_csv = 'vacancies_2024.csv'
+    filtered_csv = 'filtered_vacancies.csv'
+    keywords = ['Разработчик игр', 'GameDev', 'game', 'unity', 'игр', 'unreal']
+    filter_and_save_csv(full_csv, filtered_csv, keywords)
+
+    salary_dynamic, count_dynamic, city_salary_dynamic, city_count_dynamic, top20_skills = analyze_vacancies(full_csv)
+    filtered_salary_dynamic, filtered_count_dynamic,filtered_city_salary_dynamic, filtered_city_count_dynamic, filtered_top20_skills = analyze_vacancies(filtered_csv)
+
+    create_line_plot(salary_dynamic, 'Динамика средней зарплаты по годам', 'Год',
+                     'Средняя зарплата в рублях')
+    create_template(salary_dynamic, ['Год', 'Средняя зарплата в рублях'],
+                    'Динамика средней зарплаты по годам')
+
+    create_bar_plot(count_dynamic, 'Динамика количества вакансий по годам', 'Год',
+                    'Количество вакансий')
+    create_template(count_dynamic, ['Год', 'Количество вакансий'],
+                    'Динамика количества вакансий по годам')
+
+    create_bar_plot(city_salary_dynamic, 'Средняя зарплата по городам', 'Город',
+                    'Средняя зарплата в рублях')
+    create_template(city_salary_dynamic, ['Город', 'Средняя зарплата в рублях'],
+                    'Средняя зарплата по городам')
+
+    create_pie_plot(city_count_dynamic, 'Доли вакансий по городам')
+    create_template(city_count_dynamic, ['Город', 'Доля вакансий'], 'Доли вакансий по городам')
+
+    for year, skills in top20_skills.values:
+        skills_series = pd.Series(dict(skills))
+        create_pie_plot(skills_series, f'Навыки за {year} год')
+        create_template(skills_series, ['Навык', 'Частота'], f'Навыки за {year} год')
+        print(f"top_20_skills_for_{year} plot and template created")
+
+    print('full analytics charts done')
+    # ++++++++
+
+    create_line_plot(filtered_salary_dynamic, 'Динамика средней зарплаты по годам профессии GameDev', 'Год',
+                     'Средняя зарплата в рублях')
+    create_template(filtered_salary_dynamic, ['Год', 'Средняя зарплата в рублях'],
+                    'Динамика средней зарплаты по годам профессии GameDev')
+    print('create_line plot and template done')
+
+    create_bar_plot(filtered_count_dynamic, 'Динамика количества вакансий по годам профессии GameDev', 'Год',
+                    'Количество вакансий')
+    create_template(filtered_count_dynamic, ['Год', 'Количество вакансий'],
+                    'Динамика количества вакансий по годам профессии GameDev')
+    print('count_dynamic_bar plot and template done')
+
+    create_bar_plot(filtered_city_salary_dynamic, 'Средняя зарплата по городам профессии GameDev', 'Город',
+                    'Средняя зарплата в рублях')
+    create_template(filtered_city_salary_dynamic, ['Город', 'Средняя зарплата в рублях'],
+                    'Средняя зарплата по городам профессии GameDev')
+    print('city_salary_dynamic_bar plot and template done')
+
+    create_pie_plot(filtered_city_count_dynamic, 'Доли вакансий по городам профессии GameDev')
+    create_template(filtered_city_count_dynamic, ['Город', 'Доля вакансий'], 'Доли вакансий по городам профессии GameDev')
+    print('city_count_dynamic_bar plot and template done')
+
+    for year, skills in filtered_top20_skills.values:
+        skills_series = pd.Series(dict(skills))
+        create_pie_plot(skills_series, f'Навыки за {year} год профессии GameDev')
+        create_template(skills_series, ['Навык', 'Частота'], f'Навыки за {year} год профессии GameDev')
+        print(f"top_20_skills_for_{year} plot and template created")
+
+    print('filtered analytics charts done')
+    print('All charts have been successfully created and saved')
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+
+    print(f"Время выполнения программы: {execution_time} секунд")
