@@ -2,9 +2,7 @@ from django.shortcuts import render
 from .models import *
 import requests
 import json
-import time
 import pandas as pd
-import requests
 import json
 from bs4 import BeautifulSoup
 
