@@ -21,7 +21,7 @@
             <div class="sidebar">
                 <ul>
                     {% for page in pages %}
-                        <li><a href="{% url page.url_name %}">{{ page.name }}</a></li>
+                        <li><a href="{% url page.url_name %}"><img class="sidebar_icon" src="{% static page.icon %}"> {{ page.name }}</a></li>
                     {% endfor %}
                 </ul>
             </div>

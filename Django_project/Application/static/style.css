@@ -24,6 +24,16 @@ body, html {
     justify-content: center;
 }
 
+.sidebar_icon{
+    width:  8%;
+    height: 8%;
+}
+
+.sidebar li{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .sidebar ul{
     list-style: none;
     padding: 0;
@@ -128,7 +138,9 @@ a{
     color: #FFBE5C;
     text-decoration: none;
 }
+
 i{
     font-family: 'Times New Roman', Times, serif;
     font-size: smaller;
 }
+

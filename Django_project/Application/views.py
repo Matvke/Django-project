@@ -11,12 +11,12 @@ from bs4 import BeautifulSoup
 
 def get_pages():
     return [
-        {'url_name': 'index_page', 'name': 'Главная страница'}, # Главная страница
-        {'url_name': 'general_statistics', 'name': 'Общая статистика'}, # Общая статистика
-        {'url_name': 'demand', 'name': 'Востребованность'}, # Востребованность
-        {'url_name': 'geography', 'name': 'География'}, # География
-        {'url_name': 'skills', 'name': 'Навыки'}, # Навыки
-        {'url_name': 'last_vacancies', 'name': 'Последние вакансии'}, # Последние вакансии
+        {'url_name': 'index_page', 'name': 'Главная страница', 'icon': 'img/home.png'}, # Главная страница
+        {'url_name': 'general_statistics', 'name': 'Общая статистика', 'icon': 'img/statistics.png'}, # Общая статистика
+        {'url_name': 'demand', 'name': 'Востребованность', 'icon': 'img/statistics.png'}, # Востребованность
+        {'url_name': 'geography', 'name': 'География', 'icon': 'img/statistics.png'}, # География
+        {'url_name': 'skills', 'name': 'Навыки', 'icon': 'img/pie.png'}, # Навыки
+        {'url_name': 'last_vacancies', 'name': 'Последние вакансии', 'icon': 'img/vacancies.png'}, # Последние вакансии
     ]
 
 
