@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 
 
 def get_pages():
+    # Возвращает список страниц, их url и иконку
     return [
         {'url_name': 'index_page', 'name': 'Главная страница', 'icon': 'img/home.png'}, # Главная страница
         {'url_name': 'general_statistics', 'name': 'Общая статистика', 'icon': 'img/statistics.png'}, # Общая статистика
@@ -18,35 +19,41 @@ def get_pages():
 
 
 def index_page(request):
+    # Данные на странице index_page
     contents = PageContent.objects.filter(page='index_page')
     return render(request, 'index.html', {'pages': get_pages(), 'contents': contents})
 
 
 def general_statistics(request):
+    # Данные на странице general_statistics
     reports = Report.objects.filter(category='general_statistics')
     contents = PageContent.objects.filter(page='general_statistics')
     return render(request, 'general_statistics.html', {'pages': get_pages(), 'reports': reports, 'contents': contents})
 
 
 def demand(request):
+    # Данные на странице demand
     reports = Report.objects.filter(category='demand')
     contents = PageContent.objects.filter(page='demand')
     return render(request, 'demand.html', {'pages': get_pages(), 'reports': reports, 'contents': contents})
 
 
 def geography(request):
+    # Данные на странице geography
     reports = Report.objects.filter(category='geography')
     contents = PageContent.objects.filter(page='geography')
     return render(request, 'geography.html', {'pages': get_pages(), 'reports': reports, 'contents' : contents})
 
 
 def skills(request):
+    # Данные на странице skills
     reports = Report.objects.filter(category='skills')
     contents = PageContent.objects.filter(page='skills')
     return render(request, 'skills.html', {'pages': get_pages(), 'reports': reports, 'contents' : contents})
 
 
 def last_vacancies(request):
+    # Данные на странице last_vacancies
     vacancies = get_vacancies()
     reports = Report.objects.filter(category='last_vacancies')
     contents = PageContent.objects.filter(page='last_vacancies')
@@ -54,6 +61,7 @@ def last_vacancies(request):
 
 
 def get_vacancies():
+    # Возвращает html таблицу с 10 вакансиями 
     try:
         req = requests.get('https://api.hh.ru/vacancies?period=1&per_page=10&text=GameDev&search_field=name&search_field=description&order_by=publication_time')
         data = req.content.decode()
@@ -69,6 +77,7 @@ def get_vacancies():
             vacancy_request.close()
             vacancy_json = json.loads(vacancy_data)
         
+            # Извлекаем данные
             name = vacancy_json['name']
             description = BeautifulSoup(vacancy_json['description'], 'html.parser').text
             key_skills = ', '.join([skill['name'] for skill in vacancy_json['key_skills']])
@@ -85,6 +94,8 @@ def get_vacancies():
             published_at = vacancy_json['published_at']
 
             url = vacancy_json['alternate_url']
+
+            # Собираем в словарь
             d = {'name': name,
                 'description': f'{description[:100]}...<a href="{url}" target="_blank"> перейти к вакансии</a>',
                 'key_skills': key_skills,

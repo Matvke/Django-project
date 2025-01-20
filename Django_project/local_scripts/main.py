@@ -36,6 +36,7 @@ def get_currency_data(row):
 
 
 def get_average_salary(row):
+    # Возвращает среднюю зарплату
     salary_from = row['salary_from']
     salary_to = row['salary_to']
     if pd.isna(salary_from) and pd.isna(salary_to):
@@ -69,6 +70,7 @@ def analyze_vacancies(csv):
 
     print('Preparation completed')
 
+    # Анализ вакансий
     with ThreadPoolExecutor(max_workers=5) as executor:
         salary_dynamic_future = executor.submit(get_salary_dynamic, df)
         count_dynamic_future = executor.submit(get_count_dynamic, df)
@@ -92,6 +94,7 @@ def analyze_vacancies(csv):
 
 
 def create_bar_plot(series, title, xlabel, ylabel):
+    # Создать гистограмму
     plt.style.use('ggplot')
     plt.figure(figsize=(10, 6), facecolor='#221D22')
     series.plot(kind='bar', color='#FFBE5C')
@@ -108,6 +111,7 @@ def create_bar_plot(series, title, xlabel, ylabel):
 
 
 def create_line_plot(series, title, xlabel, ylabel):
+    # Создать линейный график
     plt.style.use('ggplot')
     plt.figure(figsize=(13, 6), facecolor='#221D22')
     series.plot(kind='line', marker='o', color='#FFBE5C')
@@ -124,10 +128,12 @@ def create_line_plot(series, title, xlabel, ylabel):
 
 
 def create_pie_plot(series, title):
+    # Создать круговую диаграмму
     if series.empty:
         return
 
     def make_autopct(values):
+        # Сделать автоматическое форматирование подписей
         def my_autopct(pct):
             total = sum(values)
             val = int(round(pct * total / 100.0))
@@ -145,6 +151,7 @@ def create_pie_plot(series, title):
 
 
 def create_template(series, columns, name):
+    # Возвращает html таблицу 
     if series.empty:
         return
     with open(f'student_works/{name}.txt', 'w', encoding='utf-8') as f:
@@ -164,10 +171,12 @@ def get_salary_dynamic(df):
 
 
 def get_count_dynamic(df):
+    # Расчитывает динамику количества вакансий
     return df.groupby('year')['name'].count().astype(int)
 
 
 def get_city_salary_dynamic(df):
+    # Расчитывает динамику зарплаты по городам
     city_salary_dynamic = df.groupby('area_name')['salary_in_rub'].mean().round()
     city_salary_dynamic = city_salary_dynamic[
                               city_salary_dynamic.index.isin(
@@ -177,6 +186,7 @@ def get_city_salary_dynamic(df):
 
 
 def get_city_count_dynamic(df):
+    # Расчитывает динамику количества вакансий по городам
     city_vacancy_share = df['area_name'].value_counts(normalize=True) * 100
     city_vacancy_share = city_vacancy_share[
                               city_vacancy_share.index.isin(
@@ -188,6 +198,7 @@ def get_city_count_dynamic(df):
 
 
 def process_skills_group(skills):
+    # Счет топ 20 вакансий в группе
     all_skills = '\n'.join(skills.dropna()).split('\n')
     cleaned_skills = [skill.strip().replace('\r', '').replace('\n', '') for skill in all_skills]
     print('Group done')
@@ -195,6 +206,7 @@ def process_skills_group(skills):
 
 
 def get_top20_skills(df):
+    # Топ20 по всем годам
     grouped = df.groupby('year')['key_skills']
 
     results = []
@@ -241,6 +253,8 @@ if __name__ == '__main__':
     salary_dynamic, count_dynamic, city_salary_dynamic, city_count_dynamic, top20_skills = analyze_vacancies(full_csv)
     filtered_salary_dynamic, filtered_count_dynamic,filtered_city_salary_dynamic, filtered_city_count_dynamic, filtered_top20_skills = analyze_vacancies(filtered_csv)
 
+    # Отрисовка графиков по всем вакансиям
+
     create_line_plot(salary_dynamic, 'Динамика средней зарплаты по годам', 'Год',
                      'Средняя зарплата в рублях')
     create_template(salary_dynamic, ['Год', 'Средняя зарплата в рублях'],
@@ -266,7 +280,7 @@ if __name__ == '__main__':
         print(f"top_20_skills_for_{year} plot and template created")
 
     print('full analytics charts done')
-    # ++++++++
+    # Отрисовка графиков по вакансиям GameDev
 
     create_line_plot(filtered_salary_dynamic, 'Динамика средней зарплаты по годам профессии GameDev', 'Год',
                      'Средняя зарплата в рублях')
